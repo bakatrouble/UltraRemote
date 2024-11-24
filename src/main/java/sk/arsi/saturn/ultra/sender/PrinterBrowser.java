@@ -23,11 +23,8 @@ import java.awt.Component;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
-import java.net.InetAddress;
-import java.net.SocketException;
-import java.net.UnknownHostException;
+import java.net.*;
+import java.util.Enumeration;
 import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -55,6 +52,7 @@ public class PrinterBrowser extends javax.swing.JPanel {
     private final JFrame frame;
     private final String filename;
     private final Properties properties;
+    private final DefaultListModel<JPanel> model = new DefaultListModel<>();
 
     /**
      * Creates new form PrinterBrowser
@@ -95,6 +93,7 @@ public class PrinterBrowser extends javax.swing.JPanel {
                 }
             }
         });
+        this.list.setModel(this.model);
         findPrinterActionPerformed(null);
     }
 
@@ -164,14 +163,29 @@ public class PrinterBrowser extends javax.swing.JPanel {
     }// </editor-fold>//GEN-END:initComponents
 
     private void findPrinterActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_findPrinterActionPerformed
-        findPrinter("255.255.255.255");
+        try {
+            Enumeration<NetworkInterface> networkInterfaces = NetworkInterface.getNetworkInterfaces();
+            while (networkInterfaces.hasMoreElements()) {
+                NetworkInterface iface = networkInterfaces.nextElement();
+                if (!iface.isLoopback()) {
+                    for (InterfaceAddress addr : iface.getInterfaceAddresses()){
+                        InetAddress broadcastAddr = addr.getBroadcast();
+                        if (broadcastAddr != null) {
+                            System.out.println("Found broadcast address: " + broadcastAddr.getHostAddress());
+                            findPrinter(broadcastAddr.getHostAddress());
+                        }
+                    }
+                }
+            }
+        } catch (SocketException e) {
+            System.out.println("Unable to find broadcast interfaces");
+        }
+//        findPrinter("255.255.255.255");
     }//GEN-LAST:event_findPrinterActionPerformed
 
     public void findPrinter(String ip) {
         try (DatagramSocket socket = new DatagramSocket(3000)) {
             // TODO add your handling code here:
-            DefaultListModel<JPanel> model = new DefaultListModel<>();
-            list.setModel(model);
             socket.setSoTimeout(2000);
             socket.setReuseAddress(true);
             System.out.println("M99999");
