@@ -163,6 +163,7 @@ public class PrinterBrowser extends javax.swing.JPanel {
     }// </editor-fold>//GEN-END:initComponents
 
     private void findPrinterActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_findPrinterActionPerformed
+        model.clear();
         try {
             Enumeration<NetworkInterface> networkInterfaces = NetworkInterface.getNetworkInterfaces();
             while (networkInterfaces.hasMoreElements()) {
