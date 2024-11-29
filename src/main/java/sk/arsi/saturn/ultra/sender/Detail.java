@@ -16,6 +16,9 @@
 package sk.arsi.saturn.ultra.sender;
 
 import java.awt.Color;
+import java.awt.datatransfer.DataFlavor;
+import java.awt.datatransfer.UnsupportedFlavorException;
+import java.awt.dnd.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
@@ -33,15 +36,14 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.List;
 import java.util.Properties;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.swing.JFileChooser;
-import javax.swing.JOptionPane;
-import javax.swing.Timer;
+import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.xml.bind.DatatypeConverter;
 import sk.arsi.saturn.ultra.sender.httpserver.SimpleHttpServer;
@@ -56,7 +58,7 @@ import sk.arsi.saturn.ultra.sender.pojo.load.LoadHandler;
  *
  * @author arsi
  */
-public class Detail extends javax.swing.JPanel implements ActionListener {
+public class Detail extends javax.swing.JPanel implements ActionListener, DropTargetListener {
 
     private final BrowseRoot root;
     private final MqttServer server;
@@ -133,6 +135,8 @@ public class Detail extends javax.swing.JPanel implements ActionListener {
         httpServer.refresh();
         httpPort.setText("" + httpServer.getAddress().getPort());
         httpDir.setText(SimpleHttpServer.TMP_DIR);
+
+        new DropTarget(this, DnDConstants.ACTION_REFERENCE, this, true, null);
     }
 
     public void processFile(String filename1) {
@@ -826,5 +830,39 @@ public class Detail extends javax.swing.JPanel implements ActionListener {
              Logger.getLogger(Detail.class.getName()).log(Level.SEVERE, null, ex);
         }
         return myChecksum+".goo";
+    }
+
+    @Override
+    public void drop(DropTargetDropEvent evt) {
+        try {
+            evt.acceptDrop(DnDConstants.ACTION_REFERENCE);
+            List<File> droppedFiles = (List<File>)evt.getTransferable().getTransferData(DataFlavor.javaFileListFlavor);
+            if (!droppedFiles.isEmpty()) {
+                processFile(droppedFiles.get(0).getAbsolutePath());
+            }
+        } catch (UnsupportedFlavorException | IOException ex) {
+            System.err.println("DnD error");
+        }
+    }
+
+
+    @Override
+    public void dragEnter(DropTargetDragEvent dropTargetDragEvent) {
+
+    }
+
+    @Override
+    public void dragOver(DropTargetDragEvent dropTargetDragEvent) {
+
+    }
+
+    @Override
+    public void dropActionChanged(DropTargetDragEvent dropTargetDragEvent) {
+
+    }
+
+    @Override
+    public void dragExit(DropTargetEvent dropTargetEvent) {
+
     }
 }
